@@ -126,9 +126,16 @@ async function processOptionsChain(data: StrikeData[]): Promise<IVResult[]> {
     parseFloat(curr.apr) > parseFloat(max.apr) ? curr : max
   );
 
-  console.log('Best LP Opportunity:');
-  console.log(`Strike: $${bestYield.strike.toFixed(4)}`);
-  console.log(`APR: ${bestYield.apr}%`);
+  // Calculate strike range for positions with APR > 0
+  const strikesWithApr = results.filter(r => parseFloat(r.apr) > 0);
+  const strikeRange = {
+    min: Math.min(...strikesWithApr.map(r => r.strike)),
+    max: Math.max(...strikesWithApr.map(r => r.strike))
+  };
+
+  console.log('Yield Opportunities:');
+  console.log(`Strike Range with APR: $${strikeRange.min.toFixed(4)} - $${strikeRange.max.toFixed(4)}`);
+  console.log(`Best Strike: $${bestYield.strike.toFixed(4)} (${bestYield.apr}%)`);
   console.log(`Utilization: ${bestYield.utilization}%\n`);
 
   // Analyze trading direction bias
@@ -142,8 +149,7 @@ async function processOptionsChain(data: StrikeData[]): Promise<IVResult[]> {
   console.log('Market Direction Bias:');
   console.log(`Put/Call Ratio: ${(putVolume / callVolume).toFixed(2)}`);
   console.log(
-    `Traders are primarily ${
-      putVolume > callVolume ? 'hedging downside' : 'betting on upside'
+    `Traders are primarily ${putVolume > callVolume ? 'hedging downside' : 'betting on upside'
     }\n`
   );
 
@@ -188,9 +194,9 @@ async function runWithInterval() {
         // Only show strikes with utilization
         console.log(
           `${result.strike.toFixed(4).padEnd(9)} ` +
-            `${result.impliedVolatility.toFixed(2).padStart(5)}  ` +
-            `${result.utilization.padStart(6)}  ` +
-            `${result.apr.padStart(6)}`
+          `${result.impliedVolatility.toFixed(2).padStart(5)}  ` +
+          `${result.utilization.padStart(6)}  ` +
+          `${result.apr.padStart(6)}`
         );
       }
     });
